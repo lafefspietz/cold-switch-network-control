@@ -36,16 +36,15 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
                 if not raw_web_input:
                     continue
                 try:
-                    instrument = json.loads(raw_web_input.strip())# get dirt
+                    instrument = json.loads(raw_web_input.strip())
                 except (json.JSONDecodeError, ValueError):
                     pass
                 
-
                 python_response['image'] = imagedata                
                 payload = json.dumps(python_response) + "\n"
                 conn.sendall(payload.encode('utf-8'))
                 conn.shutdown(socket.SHUT_WR)
-                previous_dirt = copy.deepcopy(dirt)
+                previous_instrument = copy.deepcopy(instrument)
 
     except KeyboardInterrupt:
         print("\n=== SERVER TERMINATED CLEANLY BY USER ===")

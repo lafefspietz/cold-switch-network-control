@@ -5,10 +5,111 @@
   <META NAME="robots" CONTENT="noindex,nofollow"><!--block google-->
   <link href="data:image/x-icon;base64,AAABAAEAEBAQAAEABAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD/9wAA7usAAFVRAAC7uwAA//cAAPrfAAD63wAA+t8AAPjfAAD7jwAA+98AAPvfAAD71wAA++8AAP//AAD//wAA" rel="icon" type="image/x-icon">
   <title>Cold Switch Network Control</title>    
-  <script src = "instrument.js" defer></script>
+
 </head>
 <body>
-<div id="cold-network-target" style="display: contents;"></div>
-</div>    
+<fieldset>
+  <legend>Cold Switch Network</legend>
+  
+  <label>
+    <span>Cold Output Switch 1:</span>
+    <select name="cold_output_switch_1"></select>
+  </label>
+  <label>
+    <span>Cold Thru Switch Pair:</span>
+    <select name="cold_thru_switch_pair"></select>
+  </label>
+  
+  <label>
+    <span>Cold Output Switch 2:</span>
+    <select name="cold_output_switch_2"></select>
+  </label>
+  
+</fieldset>
+
+<textarea id = "textio" style ="width:50%;height:50em;display:none"></textarea>
+</div>
+<style>
+fieldset {
+  display: inline-block;
+  font-family: sans-serif;
+}
+
+label {
+  display: block;
+  margin-bottom: 8px;
+}
+
+select {
+  display: block;
+  width: auto;
+}
+</style>
+<script>
+const socket = new WebSocket('ws://localhost:8080');
+
+instrument = {};
+cold_switch_states = {};
+
+function sendData(instrumentData) {
+  socket.send(JSON.stringify(instrumentData));
+}
+
+fetch('load-file.php?filename=instrument.json')
+  .then(response => response.text())
+  .then(data => {
+    instrument = JSON.parse(data.trim());
+    document.getElementById("textio").value = JSON.stringify(instrument, null, 2);
+    loadMenus();
+  });
+
+
+function loadMenus(){
+  instrument.cold_output_switch_1.options.forEach(item => {
+    let option = document.createElement("option");
+    option.value = item.key;
+    option.text = item.text;
+    document.querySelector('select[name="cold_output_switch_1"]').appendChild(option);
+  });
+  document.querySelector('select[name="cold_output_switch_1"]').value = instrument.cold_output_switch_1.state;
+
+  instrument.cold_output_switch_2.options.forEach(item => {
+    let option = document.createElement("option");
+    option.value = item.key;
+    option.text = item.text;
+    document.querySelector('select[name="cold_output_switch_2"]').appendChild(option);
+  });
+  document.querySelector('select[name="cold_output_switch_2"]').value = instrument.cold_output_switch_2.state;
+
+  instrument.cold_thru_switch_pair.options.forEach(item => {
+    let option = document.createElement("option");
+    option.value = item.key;
+    option.text = item.text;
+    document.querySelector('select[name="cold_thru_switch_pair"]').appendChild(option);
+  });
+  document.querySelector('select[name="cold_thru_switch_pair"]').value = instrument.cold_thru_switch_pair.state;
+  
+  cold_switch_states.cold_output_switch_1 = instrument.cold_output_switch_1.state
+  cold_switch_states.cold_output_switch_2 = instrument.cold_output_switch_2.state
+  cold_switch_states.cold_thru_switch_pair = instrument.cold_thru_switch_pair.state
+  
+}
+
+document.querySelector('fieldset').addEventListener('change', (event) => {
+  let name = event.target.name;
+  let value = event.target.value;
+//    console.log(name);
+  //  console.log(value);
+    cold_switch_states[name] = value;
+    
+  console.log(JSON.stringify(cold_switch_states));  
+
+  sendData(cold_switch_states);
+  
+});
+
+
+</script>
+
 </body>
 </html>
